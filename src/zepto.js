@@ -92,19 +92,28 @@ var Zepto = (function() {
     return elementDisplay[nodeName]
   }
 
+  var methodKeys = ['val', 'css', 'html', 'text', 'data', 'width', 'height', 'offset']
+
   // `$.zepto.fragment` takes a html string and an optional tag name
   // to generate DOM nodes nodes from the given html string.
   // The generated DOM nodes are returned as an array.
   // This function can be overriden in plugins for example to make
   // it compatible with browsers that don't support the DOM fully.
-  zepto.fragment = fragment = function(html, name) {
+  zepto.fragment = fragment = function(html, name, props) {
     if (name === undefined) name = fragmentRE.test(html) && RegExp.$1
     if (!(name in containers)) name = '*'
     var nodes, container = containers[name]
     container.innerHTML = '' + html
-    return $.each(slice.call(container.childNodes), function(){
+    nodes = $.each(slice.call(container.childNodes), function(){
       container.removeChild(this)
     })
+    // FIXME: grossly inefficient?
+    if (isPlainObject(props)) $.each(props, function(key, value) {
+      // TODO: invoke event types as methods, too
+      if (methodKeys.indexOf(key) > -1) $(nodes)[key](value)
+      else $(nodes).attr(key, value)
+    })
+    return nodes
   }
 
   // `$.zepto.Z` swaps out the prototype of the given `dom` array
@@ -149,7 +158,7 @@ var Zepto = (function() {
         dom = [selector], selector = null
       // If it's a html fragment, create nodes from it
       else if (fragmentRE.test(selector))
-        dom = zepto.fragment(selector.trim(), RegExp.$1), selector = null
+        dom = zepto.fragment(selector.trim(), RegExp.$1, context), selector = null
       // If it's a text node, just wrap it
       else if (selector.nodeType && selector.nodeType == 3) dom = [selector]
       // If there's a context, create a collection on that context first, and select
