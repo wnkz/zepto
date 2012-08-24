@@ -75,9 +75,9 @@
       $(this).css(clearProperties)
       callback && callback.call(this)
     }
-    if (duration > 0) this.bind(endEvent, wrappedCallback)
 
     setTimeout(function() {
+      if (duration > 0) that.bind(endEvent, wrappedCallback)
       that.css(cssProperties)
       if (duration <= 0) setTimeout(function() {
         that.each(function(){ wrappedCallback.call(this) })
